@@ -1,0 +1,120 @@
+# ===========================================================================
+# training
+# ===========================================================================
+training:
+  seed: 0
+  env_steps: 100_000
+  offline_update_steps: 0
+  learn_per_update_step: 1
+  eval_per_update_step: 1250
+  log_per_update_step: 125
+  save_model_per_update_step: 12500
+
+# ===========================================================================
+# logging
+# ===========================================================================
+logging:
+  use_wandb: True
+  use_tensorboard: False
+  wandb:
+    project: muzerox
+    name: Atari_100K
+  profiling: False
+
+# ===========================================================================
+# environment
+# ===========================================================================
+env:
+  common:
+    game_name: 'Breakout'
+    env_kwargs: {}
+    n_skip: 4
+    n_stack: 4
+    screen_size: 96
+  train:
+    num_envs: 8
+    vectorization_mode: async
+    max_episode_steps: 3000 
+    noop_max: 30
+    clip_reward: True
+    terminal_on_life_loss: True
+  eval:
+    num_envs: 50 # equivalent to number of episodes for evaluation
+    vectorization_mode: async
+    max_episode_steps: 6000 # 27000
+    noop_max: 30
+    clip_reward: False
+    terminal_on_life_loss: False
+
+# =========================================================================
+# agent
+# =========================================================================
+agent:
+  type: MuZero
+  value_transformation:
+    num_bins: 601
+    support: [-300, 300]
+    use_transformation: True
+  discount_factor: 0.997
+  neural_network:
+    representation_net_num_channels: 64
+    prediction_net_num_channels: 128
+    prediction_net_mlp_num_features: 64
+    normalize_state: True
+    prediction_net_mlp_zero_initialize_last_layer: True
+  act:
+    mcts:
+      num_simulations: 50 
+      pb_c_init: 1.25
+      pb_c_base: 19652
+      dirichlet_alpha: 0.3
+      dirichlet_fraction: 0.25
+      max_depth: null
+      qtransform:
+        by: updatable_min_max
+        epsilon: 0.01
+    train:
+      temperature:
+        - [0.5, 1.0]
+        - [0.75, 0.5]
+        - [1.0, 0.25]
+    eval:
+      temperature: 
+        - [1.0, 0.0]
+  learn:
+    reanalyze:
+      per_learn_step: 25
+    replay_buffer:
+      min_size: 2_000
+      max_size: 100_000
+      PER:
+        alpha: 0.6
+        beta_start: 0.4
+        beta_end: 1.0
+        priority: predicted_to_target
+        correction_per_learn_step: 25
+      log:
+        per_learn_step: 10
+        sample_size: 100
+      save: False
+    optimizer: 
+      type: adamw
+      batch_size: 256
+      lr: 0.0008
+      weight_decay: 1e-4
+      max_grad_norm: 5.0
+      steps: 8
+      warmup_ratio: 0.0
+      weight_decay_mask: True
+    loss: 
+      model:
+        unroll_steps: 5
+      reward:
+        coef: 1.0
+      policy:
+        coef: 1.0
+        entropy_coef: 0.0
+      value:
+        coef: 0.25
+        td_steps: 5
+        bootstrap_from: mcts

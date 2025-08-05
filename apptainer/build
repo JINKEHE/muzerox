@@ -1,0 +1,2 @@
+#!/bin/bash
+sudo apptainer build apptainer/container.sif apptainer/container.def

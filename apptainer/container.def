@@ -1,0 +1,38 @@
+Bootstrap: docker
+FROM: nvidia/cuda:12.6.2-cudnn-devel-ubuntu24.04
+
+%files
+    requirements.txt
+
+%post
+    apt-get -yq update
+    DEBIAN_FRONTEND="noninteractive" apt-get -yq install tzdata
+    apt-get -yq --no-install-recommends install \
+        libsm6 \
+        libxext6 \
+        libxrender-dev \
+        software-properties-common \
+	    build-essential \
+        apt-transport-https \
+        ca-certificates \
+        aptitude \
+        wget \
+        vim \
+        rsync \
+	    swig \
+        python3 \
+        python3-pip \
+        python3-venv \
+        zlib1g-dev \
+        git \
+        cmake \
+        unzip && \
+    chmod -R 777 /opt
+    chmod -R 777 /root
+    pip3 install --break-system-packages --ignore-installed -r requirements.txt
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+    rm -rf /root/.cache
+%environment
+    export LC_ALL=C
+    alias python=python3

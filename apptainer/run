@@ -1,0 +1,2 @@
+#!/bin/bash
+apptainer exec --nv --bind $(pwd -P) apptainer/container.sif "$@"
